@@ -55,7 +55,7 @@ def get_connection():
 
 
 @app.route(route="people", methods=["GET"])
-def people(req: func.HttpRequest) -> func.HttpResponse:
+def get_people(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -83,9 +83,8 @@ def people(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return json_response({"error": str(e)}, status_code=500)
 
-
 @app.route(route="balances", methods=["GET"])
-def balances(req: func.HttpRequest) -> func.HttpResponse:
+def get_balances(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -133,9 +132,60 @@ def balances(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return json_response({"error": str(e)}, status_code=500)
 
+@app.route(route="ledger", methods=["GET"])
+def get_ledger(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT
+                l.entry_id,
+                l.entry_date,
+                l.debtor_person_id,
+                d.display_name AS debtor_name,
+                l.creditor_person_id,
+                c.display_name AS creditor_name,
+                l.amount,
+                l.currency,
+                l.memo,
+                l.created_at
+            FROM ledger l
+            JOIN people d
+                ON l.debtor_person_id = d.person_id
+            JOIN people c
+                ON l.creditor_person_id = c.person_id
+            ORDER BY
+                l.entry_date DESC,
+                l.entry_id DESC
+        """)
+
+        rows = cursor.fetchall()
+        results = [
+            {
+                "entry_id": row.entry_id,
+                "entry_date": row.entry_date,
+                "debtor_person_id": row.debtor_person_id,
+                "debtor_name": row.debtor_name,
+                "creditor_person_id": row.creditor_person_id,
+                "creditor_name": row.creditor_name,
+                "amount": row.amount,
+                "currency": row.currency,
+                "memo": row.memo,
+                "created_at": row.created_at,
+            }
+            for row in rows
+        ]
+
+        cursor.close()
+        conn.close()
+        return json_response(results)
+
+    except Exception as e:
+        return json_response({"error": str(e)}, status_code=500)
 
 @app.route(route="ledger", methods=["POST"])
-def ledger(req: func.HttpRequest) -> func.HttpResponse:
+def add_ledger(req: func.HttpRequest) -> func.HttpResponse:
     conn = None
     cursor = None
 
