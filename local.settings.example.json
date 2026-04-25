@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "{azure_web_jobs_storage}",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "SQL_SERVER": "{server_name}.database.windows.net",
+    "SQL_DATABASE": "{database_name}",
+    "SQL_USERNAME": "{username}",
+    "SQL_PASSWORD": "{password}"
+  }
+}
